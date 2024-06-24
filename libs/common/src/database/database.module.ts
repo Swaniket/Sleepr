@@ -1,11 +1,21 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigService } from '@nestjs/config';
+import { ModelDefinition, MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '../config/config.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(
-      'mongodb+srv://sleepr:cwf5ZGfRietVz9ha@cluster0.rgbf72l.mongodb.net/',
-    ),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        return { uri: configService.get('MONGODB_URI') };
+      },
+      inject: [ConfigService],
+    }),
   ],
 })
-export class DatabaseModule {}
+export class DatabaseModule {
+  static forFeature(models: ModelDefinition[]) {
+    return MongooseModule.forFeature(models);
+  }
+}
